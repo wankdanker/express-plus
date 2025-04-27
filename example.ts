@@ -1,5 +1,5 @@
 import express from 'express';
-import { expressPlus, routerPlus, z } from '.'; // In real usage, this would be 'express-plus'
+import { expressPlus, routerPlus, z, mountRegistry } from '.'; // In real usage, this would be 'express-plus'
 
 // Initialize ExpressPlus with an Express app
 const { app, registry } = expressPlus(express());
@@ -179,7 +179,14 @@ usersRouter.post({
 });
 
 // Create a Products router
-const { router: productsRouter } = routerPlus();
+const { router: productsRouter, registry: productsRegistry } = routerPlus();
+
+// Configure the products router registry
+productsRegistry
+  .setInfo({
+    title: 'Products API',
+    version: '1.0.0'
+  });
 
 // GET /products
 productsRouter.get({
@@ -219,7 +226,14 @@ productsRouter.get({
 });
 
 // Create a nested router to demonstrate composition
-const { router: adminRouter } = routerPlus();
+const { router: adminRouter, registry: adminRegistry } = routerPlus();
+
+// Configure the admin router registry
+adminRegistry
+  .setInfo({
+    title: 'Admin API',
+    version: '1.0.0'
+  });
 
 // Add a route to the admin router
 adminRouter.get({
@@ -257,7 +271,65 @@ app.use('/api/v1/products', productsRouter);
 
 // Serve OpenAPI documentation
 app.get('/api-docs.json', (req, res) => {
-  res.json(registry.generateOpenAPIDocument());
+  // Generate the OpenAPI document with all mounted routers
+  const document = registry.generateOpenAPIDocument();
+  res.json(document);
+});
+
+// Debug route to see mount registry
+app.get('/api-debug', (req, res) => {
+  // Import the mount registry
+  const { mountRegistry } = require('./src/utils');
+  
+  // Get the paths from the main registry
+  const mainPaths = registry.getRawRegistry().definitions
+    .filter(def => def.type === 'path')
+    .map(def => ({
+      path: def.schema.path,
+      method: def.schema.method,
+      source: 'main'
+    }));
+    
+  // Get paths from each mounted registry with expected combined paths
+  const mountedPaths = mountRegistry.flatMap(m => 
+    m.registry ? m.registry.definitions
+      .filter(def => def.type === 'path')
+      .map(def => {
+        let routePath = def.schema.path;
+        if (routePath.startsWith('/')) {
+          routePath = routePath.substring(1);
+        }
+        const expectedPath = m.path === '/' ? `/${routePath}` : `${m.path}/${routePath}`;
+        
+        return {
+          originalPath: def.schema.path,
+          method: def.schema.method,
+          mountPoint: m.path,
+          expectedCombinedPath: expectedPath,
+          source: 'mounted'
+        };
+      }) : []
+  );
+  
+  // Generate the complete OpenAPI document
+  const openApiDoc = registry.generateOpenAPIDocument();
+  
+  res.json({
+    mountPoints: mountRegistry.map(m => ({
+      path: m.path,
+      hasRegistry: !!m.registry,
+      definitionsCount: m.registry ? m.registry.definitions.length : 0
+    })),
+    paths: {
+      main: mainPaths,
+      mounted: mountedPaths
+    },
+    // Compare expected vs actual
+    expectedPaths: mountedPaths.map(p => p.expectedCombinedPath),
+    actualPaths: Object.keys(openApiDoc.paths || {}),
+    // Full document for reference
+    combinedPaths: openApiDoc.paths
+  });
 });
 
 app.get('/status', {

@@ -2,6 +2,13 @@ import { Request, Response, NextFunction, Application, RequestHandler, Router, I
 import { z, ZodType, ZodObject, ZodTypeAny } from 'zod';
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 
+// // Module augmentation to fix Express type compatibility
+// declare module 'express' {
+//   interface Application {
+//     use(...handlers: any[]): Application;
+//   }
+// }
+
 // HTTP method types
 export type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'options' | 'head';
 
@@ -93,7 +100,7 @@ export type AugmentedMethod<T> = ((name: string) => any) &
   };
 
 // Extended application interface with augmented methods
-export interface ExpressPlusApplication extends Omit<Application, 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head'> {
+export interface ExpressPlusApplication extends Omit<Application, 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head' | 'use'> {
   get: AugmentedMethod<Application>;
   post: AugmentedMethod<Application>;
   put: AugmentedMethod<Application>;
@@ -101,10 +108,16 @@ export interface ExpressPlusApplication extends Omit<Application, 'get' | 'post'
   patch: AugmentedMethod<Application>;
   options: AugmentedMethod<Application>;
   head: AugmentedMethod<Application>;
+  
+  // Extended use() overloads to support RouterPlus instances
+  use(router: RouterPlus): ExpressPlusApplication;
+  use(path: string, router: RouterPlus): ExpressPlusApplication;
+  use(...handlers: Array<RequestHandler | RouterPlus | Router>): ExpressPlusApplication;
+  use(path: string, ...handlers: Array<RequestHandler | RouterPlus | Router>): ExpressPlusApplication;
 }
 
 // Extended router interface with augmented methods
-export interface RouterPlus extends Omit<Router, 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head'> {
+export interface RouterPlus extends Omit<Router, 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head' | 'use'> {
   get: AugmentedMethod<Router>;
   post: AugmentedMethod<Router>;
   put: AugmentedMethod<Router>;
@@ -112,6 +125,16 @@ export interface RouterPlus extends Omit<Router, 'get' | 'post' | 'put' | 'delet
   patch: AugmentedMethod<Router>;
   options: AugmentedMethod<Router>;
   head: AugmentedMethod<Router>;
+  
+  // Extended use() overloads to support RouterPlus instances for nested routing
+  use(router: RouterPlus): RouterPlus;
+  use(path: string, router: RouterPlus): RouterPlus;
+  use(...handlers: Array<RequestHandler | RouterPlus | Router>): RouterPlus;
+  use(path: string, ...handlers: Array<RequestHandler | RouterPlus | Router>): RouterPlus;
+  
+  // Custom properties for internal tracking
+  _isRouterPlus?: boolean;
+  _registry?: any;
 }
 
 export type OpenAPIConfig = {

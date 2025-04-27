@@ -62,8 +62,17 @@ export interface MountInfo {
 
 /**
  * Store for mount information
+ * This is a global registry of all mounted RouterPlus instances
  */
 export const mountRegistry: MountInfo[] = [];
+
+// Debug function to see what's in the mount registry
+function debugMountRegistry() {
+  console.log('Mount Registry:', mountRegistry.map(m => ({ 
+    path: m.path, 
+    registry: m.registry ? 'Registry Present' : 'No Registry' 
+  })));
+}
 
 /**
  * Register a mount point for a router with its associated registry
@@ -88,6 +97,9 @@ export function registerMount(mountPath: string, registry: any): void {
   });
 }
 
+// Expose debug functions
+export { debugMountRegistry };
+
 /**
  * Combines multiple OpenAPI registries based on mount points
  * 
@@ -103,13 +115,19 @@ export function combineRegistries(baseRegistry: any): any {
   
   // Process each mounted registry
   mountRegistry.forEach(({ path, registry }) => {
-    // Skip if the path is '/' as it doesn't need adjustment
+    // Skip if the registry is not valid
+    if (!registry || !registry.definitions) {
+      return;
+    }
+    
+    // Root path special case
     if (path === '/') {
       // Just merge the definitions directly
       registry.definitions.forEach((def: any) => {
         if (!baseDefinitions.some((baseDef: any) => 
             baseDef.type === def.type && 
-            JSON.stringify(baseDef.schema) === JSON.stringify(def.schema))) {
+            (def.name ? baseDef.name === def.name : 
+            JSON.stringify(baseDef.schema) === JSON.stringify(def.schema)))) {
           baseDefinitions.push(def);
         }
       });
@@ -120,8 +138,8 @@ export function combineRegistries(baseRegistry: any): any {
     registry.definitions.forEach((def: any) => {
       // If it's a path definition, adjust the path
       if (def.type === 'path') {
-        // Create a copy of the definition with the adjusted path
-        const adjustedDef = { ...def };
+        // Create a deep copy of the definition
+        const adjustedDef = JSON.parse(JSON.stringify(def));
         
         // Combine the mount path with the route path
         // Ensure no double slashes
@@ -129,9 +147,13 @@ export function combineRegistries(baseRegistry: any): any {
         if (routePath.startsWith('/')) {
           routePath = routePath.substring(1);
         }
+        
+        // Normalize the path combining
+        const normalizedPath = path === '/' ? `/${routePath}` : `${path}/${routePath}`;
+        
         adjustedDef.schema = {
-          ...def.schema,
-          path: `${path}/${routePath}`
+          ...adjustedDef.schema,
+          path: normalizedPath
         };
         
         // Add to base registry if not already there
@@ -145,7 +167,8 @@ export function combineRegistries(baseRegistry: any): any {
         // For non-path definitions (schemas, responses, etc.), add directly if not exists
         if (!baseDefinitions.some((baseDef: any) => 
             baseDef.type === def.type && 
-            (baseDef.name === def.name || JSON.stringify(baseDef.schema) === JSON.stringify(def.schema)))) {
+            (def.name ? baseDef.name === def.name : 
+            JSON.stringify(baseDef.schema) === JSON.stringify(def.schema)))) {
           baseDefinitions.push(def);
         }
       }
