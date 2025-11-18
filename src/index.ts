@@ -28,23 +28,23 @@ export { routerPlus as plusRouter };
 /**
  * Unified plus() function that works with both Express apps and routers
  *
- * @overload Create a new enhanced router
+ * The overloads are carefully ordered to discriminate between Application and Router:
+ * - Application has a listen() method
+ * - Router does not have a listen() method
  */
+
+// Overload 1: Create a new enhanced router (no arguments)
 export function plus(): RouterPlusReturn;
 
-/**
- * @overload Enhance an existing Express router
- * @param router Express router instance
- * @param opts Configuration options
- */
-export function plus(router: Router, opts?: ApiOptions): RouterPlusReturn;
+// Overload 2: Enhance an Express application
+// We use an intersection type to explicitly require the listen method
+export function plus(
+  app: Application & { listen: (...args: any[]) => any },
+  opts?: ApiOptions
+): ExpressPlusReturn;
 
-/**
- * @overload Enhance an Express application
- * @param app Express application instance
- * @param opts Configuration options
- */
-export function plus(app: Application, opts?: ApiOptions): ExpressPlusReturn;
+// Overload 3: Enhance an Express router
+export function plus(router: Router, opts?: ApiOptions): RouterPlusReturn;
 
 /**
  * Unified plus() function implementation
