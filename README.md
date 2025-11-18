@@ -1,6 +1,6 @@
-# ExpressPlus
+# PlusExpress
 
-ExpressPlus is a powerful library that enhances Express.js with:
+PlusExpress is a powerful library that enhances Express.js with:
 
 1. **Type-safe validation** - Validate requests using Zod schemas
 2. **Automatic OpenAPI documentation** - Generate OpenAPI/Swagger docs from your routes
@@ -9,10 +9,10 @@ ExpressPlus is a powerful library that enhances Express.js with:
 ## Installation
 
 ```bash
-npm install express-plus
+npm install plus-express
 ```
 
-ExpressPlus has `express` as a peer dependency, so make sure you have it installed:
+PlusExpress has `express` as a peer dependency, so make sure you have it installed:
 
 ```bash
 npm install express
@@ -22,10 +22,10 @@ npm install express
 
 ```typescript
 import express from 'express';
-import { expressPlus, z } from 'express-plus';
+import { plus, z } from 'plus-express';
 
-// Initialize ExpressPlus with an existing Express app
-const { app, registry } = expressPlus(express());
+// Initialize PlusExpress with an existing Express app
+const { app, registry } = plus(express());
 
 // Configure the registry using the builder pattern
 registry
@@ -88,11 +88,11 @@ app.listen(3000, () => {
 
 ### Builder Pattern for Configuration
 
-ExpressPlus uses a fluent builder pattern for configuration:
+PlusExpress uses a fluent builder pattern for configuration:
 
 ```typescript
-// Get the registry from expressPlus
-const { app, registry } = expressPlus(express());
+// Get the registry from plus
+const { app, registry } = plus(express());
 
 // Configure using chainable methods
 registry
@@ -137,13 +137,13 @@ registry
 
 ### Enhanced Routes with Type Safety
 
-ExpressPlus extends Express's route methods with additional signatures that support validation and documentation:
+PlusExpress extends Express's route methods with additional signatures that support validation and documentation:
 
 ```typescript
 // Standard Express route definition
 app.get('/users', (req, res) => { /* ... */ });
 
-// ExpressPlus route with validation and docs
+// PlusExpress route with validation and docs
 app.get({
   path: '/users',
   summary: 'Get all users',
@@ -174,7 +174,7 @@ app.get('/users/:id', {
 
 ### Automatic Request Validation
 
-ExpressPlus automatically validates incoming requests against your Zod schemas:
+PlusExpress automatically validates incoming requests against your Zod schemas:
 
 ```typescript
 app.post({
@@ -198,7 +198,7 @@ app.post({
 
 ### Accessing Validated Data with req.parsed
 
-ExpressPlus adds a `parsed` namespace to the request object that contains all validated data:
+PlusExpress adds a `parsed` namespace to the request object that contains all validated data:
 
 ```typescript
 app.get({
@@ -220,13 +220,13 @@ This keeps all validated data organized in a single namespace while maintaining 
 
 ### Enhanced Routers
 
-ExpressPlus also provides enhanced routers with the same validation and documentation capabilities:
+PlusExpress provides a unified `plus()` function that works for both apps and routers:
 
 ```typescript
-import { routerPlus } from 'express-plus';
+import { plus } from 'plus-express';
 
-// Create a new enhanced router
-const { router, registry } = routerPlus();
+// Create a new enhanced router (plus() with no arguments)
+const { router, registry } = plus();
 
 // Configure the router's registry
 registry.setInfo({
@@ -251,13 +251,13 @@ app.use('/api', router);
 
 ## Composing Routers
 
-ExpressPlus automatically handles router composition, correctly combining OpenAPI specifications from multiple routers and respecting mount paths:
+PlusExpress automatically handles router composition, correctly combining OpenAPI specifications from multiple routers and respecting mount paths:
 
 ```typescript
-// Create multiple routers
-const { router: usersRouter } = routerPlus();
-const { router: productsRouter } = routerPlus();
-const { router: adminRouter } = routerPlus();
+// Create multiple routers using the unified plus() function
+const { router: usersRouter } = plus();
+const { router: productsRouter } = plus();
+const { router: adminRouter } = plus();
 
 // Define routes on each router
 usersRouter.get('/profile', /* ... */);
@@ -280,7 +280,7 @@ app.use('/api/v1/products', productsRouter);
 
 ### How Router Composition Works
 
-ExpressPlus uses a smart tracking system to handle router composition:
+PlusExpress uses a smart tracking system to handle router composition:
 
 1. Each `RouterPlus` instance is marked with its registry
 2. When a router is mounted (via `app.use()` or `router.use()`), the mount path is registered
@@ -291,7 +291,7 @@ This works with any level of nesting, allowing you to organize your API however 
 
 ## OpenAPI Documentation
 
-ExpressPlus automatically generates OpenAPI documentation based on your route definitions and registry configuration:
+PlusExpress automatically generates OpenAPI documentation based on your route definitions and registry configuration:
 
 ```typescript
 // Serve OpenAPI documentation
@@ -309,22 +309,27 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(null, {
 
 ## API Reference
 
-### expressPlus(app, options?)
+### plus()
 
-Enhances an Express application with validation and OpenAPI documentation.
+The unified `plus()` function works with both Express applications and routers. It automatically detects the type and applies the appropriate enhancements:
 
 ```typescript
-const { app, registry } = expressPlus(express());
+// Enhance an Express application
+const { app, registry } = plus(express());
+
+// Create a new enhanced router
+const { router, registry } = plus();
+
+// Enhance an existing router
+const existingRouter = express.Router();
+const { router, registry } = plus(existingRouter);
 ```
 
-### routerPlus(router?, options?)
-
-Enhances an Express router with validation and OpenAPI documentation.
+For those who prefer explicit naming, `plusRouter()` is also available as an alias:
 
 ```typescript
-const { router, registry } = routerPlus();
-// or
-const { router, registry } = routerPlus(express.Router());
+import { plusRouter } from 'plus-express';
+const { router, registry } = plusRouter();
 ```
 
 ### Registry Methods

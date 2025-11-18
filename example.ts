@@ -1,8 +1,11 @@
 import express from 'express';
-import { expressPlus, routerPlus, z } from '.'; // In real usage, this would be 'express-plus'
+import { plus, z } from '.'; // In real usage, this would be 'plus-express'
 
-// Initialize ExpressPlus with an Express app
-const { app, registry } = expressPlus(express());
+// Configuration
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+
+// Initialize PlusExpress with an Express app using the unified plus() function
+const { app, registry } = plus(express());
 
 // Enable JSON body parsing
 app.use(express.json());
@@ -12,10 +15,10 @@ registry
   .setInfo({
     title: 'Example API',
     version: '1.0.0',
-    description: 'An example API built with ExpressPlus'
+    description: 'An example API built with PlusExpress'
   })
   .addServer({
-    url: 'http://localhost:3000',
+    url: `http://localhost:${PORT}`,
     description: 'Development server'
   })
   .addServer({
@@ -63,8 +66,8 @@ const UserSchema = z.object({
   age: z.number().min(18)
 });
 
-// Create a Users router
-const { router: usersRouter, registry: usersRegistry } = routerPlus();
+// Create a Users router using the unified plus() function
+const { router: usersRouter, registry: usersRegistry } = plus();
 
 // Configure the users router registry
 usersRegistry
@@ -181,8 +184,8 @@ usersRouter.post({
   res.status(201).json({ id, name, email, age });
 });
 
-// Create a Products router
-const { router: productsRouter, registry: productsRegistry } = routerPlus();
+// Create a Products router using the unified plus() function
+const { router: productsRouter, registry: productsRegistry } = plus();
 
 // Configure the products router registry
 productsRegistry
@@ -228,8 +231,8 @@ productsRouter.get({
   res.json({ products });
 });
 
-// Create a nested router to demonstrate composition
-const { router: adminRouter, registry: adminRegistry } = routerPlus();
+// Create a nested router to demonstrate composition using the unified plus() function
+const { router: adminRouter, registry: adminRegistry } = plus();
 
 // Configure the admin router registry
 adminRegistry
@@ -376,7 +379,6 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 // Start the server
-const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`API Documentation: http://localhost:${PORT}/api-docs.json`);

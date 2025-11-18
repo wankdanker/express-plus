@@ -1,5 +1,5 @@
 {
-  "name": "express-plus",
+  "name": "plus-express",
   "version": "1.0.0",
   "description": "Express.js enhanced with type-safe validation and automatic OpenAPI documentation",
   "main": "dist/index.js",
