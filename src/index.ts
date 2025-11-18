@@ -12,7 +12,7 @@ export * from './types';
 extendZodWithOpenApi(z);
 
 /**
- * ExpressPlus - Enhanced Express with validation and OpenAPI documentation
+ * PlusExpress - Enhanced Express with validation and OpenAPI documentation
  */
 export {
   expressPlus,
@@ -21,9 +21,12 @@ export {
   z
 };
 
+// Export the main `plus()` function
+export { expressPlus as plus };
+
 /**
  * Create an enhanced Express application
- * 
+ *
  * @param app Optional Express application (creates one if not provided)
  * @param options Configuration options
  */
@@ -39,13 +42,13 @@ export function createExpressPlus(app?: Application, options = {}) {
       );
     }
   }
-  
+
   return expressPlus(app as Application, options);
 }
 
 /**
  * Create an enhanced Express router
- * 
+ *
  * @param router Optional Express router (creates one if not provided)
  * @param options Configuration options
  */

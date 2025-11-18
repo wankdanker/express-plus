@@ -1,8 +1,8 @@
 import express from 'express';
-import { expressPlus, routerPlus, z } from '.'; // In real usage, this would be 'express-plus'
+import { plus, routerPlus, z } from '.'; // In real usage, this would be 'plus-express'
 
-// Initialize ExpressPlus with an Express app
-const { app, registry } = expressPlus(express());
+// Initialize PlusExpress with an Express app
+const { app, registry } = plus(express());
 
 // Enable JSON body parsing
 app.use(express.json());
@@ -12,7 +12,7 @@ registry
   .setInfo({
     title: 'Example API',
     version: '1.0.0',
-    description: 'An example API built with ExpressPlus'
+    description: 'An example API built with PlusExpress'
   })
   .addServer({
     url: 'http://localhost:3000',

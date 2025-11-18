@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import express, { Application } from 'express';
 import request from 'supertest';
-import { expressPlus } from './express-plus';
+import { plus } from './index';
 import { routerPlus } from './router-plus';
 import { z } from 'zod';
 
-describe('expressPlus', () => {
+describe('plus', () => {
   let app: Application;
   let registry: any;
 
   beforeEach(() => {
-    const result = expressPlus(express());
+    const result = plus(express());
     app = result.app;
     registry = result.registry;
   });
