@@ -1,6 +1,8 @@
-import { Request, Response, NextFunction, Application, RequestHandler, Router, IRouterMatcher } from 'express';
+import { Request, Response, NextFunction, Application, RequestHandler, ErrorRequestHandler, Router, IRouterMatcher } from 'express';
 import { z, ZodType, ZodObject, ZodTypeAny } from 'zod';
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
+
+// Note: ErrorRequestHandler added to support Express error handlers (4-parameter middleware)
 
 // // Module augmentation to fix Express type compatibility
 // declare module 'express' {
@@ -112,8 +114,8 @@ export interface ExpressPlusApplication extends Omit<Application, 'get' | 'post'
   // Extended use() overloads to support RouterPlus instances
   use(router: RouterPlus): ExpressPlusApplication;
   use(path: string, router: RouterPlus): ExpressPlusApplication;
-  use(...handlers: Array<RequestHandler | RouterPlus | Router>): ExpressPlusApplication;
-  use(path: string, ...handlers: Array<RequestHandler | RouterPlus | Router>): ExpressPlusApplication;
+  use(...handlers: Array<RequestHandler | ErrorRequestHandler | RouterPlus | Router>): ExpressPlusApplication;
+  use(path: string, ...handlers: Array<RequestHandler | ErrorRequestHandler | RouterPlus | Router>): ExpressPlusApplication;
 }
 
 // Extended router interface with augmented methods
@@ -129,8 +131,8 @@ export interface RouterPlus extends Omit<Router, 'get' | 'post' | 'put' | 'delet
   // Extended use() overloads to support RouterPlus instances for nested routing
   use(router: RouterPlus): RouterPlus;
   use(path: string, router: RouterPlus): RouterPlus;
-  use(...handlers: Array<RequestHandler | RouterPlus | Router>): RouterPlus;
-  use(path: string, ...handlers: Array<RequestHandler | RouterPlus | Router>): RouterPlus;
+  use(...handlers: Array<RequestHandler | ErrorRequestHandler | RouterPlus | Router>): RouterPlus;
+  use(path: string, ...handlers: Array<RequestHandler | ErrorRequestHandler | RouterPlus | Router>): RouterPlus;
   
   // Custom properties for internal tracking
   _isRouterPlus?: boolean;

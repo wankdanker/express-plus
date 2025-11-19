@@ -366,7 +366,7 @@ app.get('/swagger', (req, res) => {
 `)
 })
 
-// Error handler
+// Error handler - handles 4-parameter Express error middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   const status = err.status || 500;
   const message = err.message || 'Internal Server Error';
